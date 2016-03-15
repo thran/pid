@@ -9,7 +9,8 @@ grunt.initConfig({
                 'bower_components/angular/angular.min.js',
                 'bower_components/angular-animate/angular-animate.min.js',
                 'bower_components/foundation/js/vendor/modernizr.js',
-                'bower_components/foundation/js/foundation.min.js'
+                'bower_components/foundation/js/foundation.min.js',
+                'bower_components/ng-file-upload/ng-file-upload.min.js'
             ],
             dest: 'static/libs.min.js'
         },

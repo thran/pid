@@ -11,7 +11,9 @@
 
 <body>
 
-<div ng-app="pid" ng-controller="pid">
+<div ng-app="pid" ng-controller="pid" class="content">
+    <div class="button" ngf-accept="'image/jpeg'" ngf-select ng-model="file" ngf-multiple="false">Select File</div>
+    {{ result }}
 </div>
 
 </body>
