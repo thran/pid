@@ -12,8 +12,14 @@
 <body>
 
 <div ng-app="pid" ng-controller="pid" class="content">
-    <div class="button" ngf-accept="'image/jpeg'" ngf-select ng-model="file" ngf-multiple="false">Select File</div>
-    {{ result }}
+    <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="file" ngf-multiple="false">Select File</div>
+    <div>
+        <ul>
+            <li ng-repeat="result in results | orderBy:'-probability'">
+                <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
+            </li>
+        </ul>
+    </div>
 </div>
 
 </body>

@@ -14,8 +14,10 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                 file: file
             }
         }).then(function (response) {
-            $scope.result = response.data;
-            console.log($scope.result);
+            $scope.results = [];
+            angular.forEach(response.data, function (prob, cls) {
+                $scope.results.push({class: cls, probability: prob});
+            });
         });
     };
 }]);
