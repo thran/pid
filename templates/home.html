@@ -20,7 +20,8 @@
 
     <div class="medium-4 columns">
         <div class="loader" ng-cloak ng-show="loading"></div>
-        <ul>
+        <p ng-show="error">{{ error }}</p>
+        <ul ng-show="results && !error">
             <li ng-repeat="result in results | orderBy:'-probability'">
                 <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
             </li>

@@ -9,6 +9,8 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
     });
 
     $scope.upload = function (file) {
+        $scope.results = null;
+        $scope.error = null;
         $scope.loading = true;
         Upload.upload({
             url: '/identify',
@@ -18,9 +20,13 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         }).then(function (response) {
             $scope.results = [];
             $scope.loading = false;
-            angular.forEach(response.data, function (prob, cls) {
-                $scope.results.push({class: cls, probability: prob});
-            });
+            if (response.data.error){
+                $scope.error = response.data.error;
+            }else {
+                angular.forEach(response.data, function (prob, cls) {
+                    $scope.results.push({class: cls, probability: prob});
+                });
+            }
         });
     };
 }]);

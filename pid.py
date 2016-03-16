@@ -24,7 +24,7 @@ def random_string(length=10):
 @app.route('/identify', methods=['POST'])
 def identify():
     file = request.files["file"]
-    ids = model.identify_plant(file.stream.getvalue())
+    ids = model.identify_plant(file.read())
     return json.dumps(ids)
 
 
