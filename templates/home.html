@@ -16,6 +16,11 @@
         <img ngf-thumbnail="file" alt="">
         <br><br>
         <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="file" ngf-multiple="false">Select Jpeg</div>
+        <ul>
+            <li ng-repeat="class in classes| orderBy">
+                {{ class }}
+            </li>
+        </ul>
     </div>
 
     <div class="medium-4 columns">

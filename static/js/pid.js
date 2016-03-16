@@ -8,6 +8,11 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         }
     });
 
+    $http.get("/classes").success(function (response) {
+        $scope.classes = response;
+    });
+
+
     $scope.upload = function (file) {
         $scope.results = null;
         $scope.error = null;

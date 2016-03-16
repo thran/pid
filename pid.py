@@ -17,6 +17,11 @@ def home():
     return send_file('templates/home.html')
 
 
+@app.route('/classes')
+def classes():
+    return send_file('classes.json')
+
+
 def random_string(length=10):
     return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(length))
 
