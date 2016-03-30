@@ -11,6 +11,17 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         $scope.classes = response;
     });
 
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position){
+            $scope.$apply(function(){
+                $scope.lat = position.coords.latitude;
+                $scope.lng = position.coords.longitude;
+            });
+    });
+
+        $scope.week = (new Date()).getWeekNumber();
+  }
+
 
     $scope.upload = function (file) {
         $scope.results = null;
@@ -19,7 +30,10 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         Upload.upload({
             url: '/identify',
             data: {
-                file: file
+                file: file,
+                lat: $scope.lat,
+                lng: $scope.lng,
+                week: $scope.week
             }
         }).then(function (response) {
             $scope.results = [];
@@ -37,3 +51,10 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         });
     };
 }]);
+
+Date.prototype.getWeekNumber = function(){
+    var d = new Date(+this);
+    d.setHours(0,0,0);
+    d.setDate(d.getDate()+4-(d.getDay()||7));
+    return Math.ceil((((d-new Date(d.getFullYear(),0,1))/8.64e7)+1)/7);
+};

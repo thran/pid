@@ -14,6 +14,15 @@
 <div ng-app="pid" ng-controller="pid" class="content row">
     <div class="medium-8 columns">
         <img ngf-thumbnail="file" alt="">
+        <label>Latitude
+            <input type="number" ng-model="lat">
+        </label>
+        <label>Longitude
+            <input type="number" ng-model="lng">
+        </label>
+        <label>Week number
+            <input type="number" ng-model="week">
+        </label>
         <br><br>
         <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="file" ngf-multiple="false">Select Jpeg</div>
         <ul>
