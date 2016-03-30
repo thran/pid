@@ -31,7 +31,9 @@ def identify():
     file = request.files["file"]
 
     ids = model.identify_plant(file.read(), request.form)
-    return json.dumps(ids)
+    return json.dumps({
+        "plants": ids
+    })
 
 
 app.wsgi_app = ProxyFix(app.wsgi_app)

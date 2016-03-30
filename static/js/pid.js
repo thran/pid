@@ -41,7 +41,7 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
             if (response.data.error){
                 $scope.error = response.data.error;
             }else {
-                angular.forEach(response.data, function (prob, cls) {
+                angular.forEach(response.data.plants, function (prob, cls) {
                     $scope.results.push({class: cls, probability: prob});
                 });
             }
