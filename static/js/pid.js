@@ -2,7 +2,6 @@ var app = angular.module('pid', ["ngFileUpload"]);
 
 app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upload) {
     $scope.$watch('file', function () {
-        console.log($scope.file);
          if ($scope.file && $scope.file !== null) {
              $scope.upload($scope.file);
         }
@@ -32,6 +31,9 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                     $scope.results.push({class: cls, probability: prob});
                 });
             }
+        }, function(response){
+            $scope.loading = false;
+            $scope.error = "Something went wrong.";
         });
     };
 }]);
