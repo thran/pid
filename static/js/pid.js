@@ -44,6 +44,7 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                 angular.forEach(response.data.plants, function (prob, cls) {
                     $scope.results.push({class: cls, probability: prob});
                 });
+                $scope.certainties = response.data.certainties;
             }
         }, function(response){
             $scope.loading = false;

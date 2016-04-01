@@ -30,9 +30,10 @@ def random_string(length=10):
 def identify():
     file = request.files["file"]
 
-    ids = model.identify_plant(file.read(), request.form)
+    ids, certainties = model.identify_plant(file.read(), request.form)
     return json.dumps({
-        "plants": ids
+        "plants": ids,
+        "certainties": certainties,
     })
 
 
