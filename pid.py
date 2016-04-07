@@ -11,6 +11,13 @@ encoder.FLOAT_REPR = lambda o: format(o, '.3f')
 app = Flask(__name__)
 model = Model()
 
+ADMINS = ['exthran@gmail.com']
+if not app.debug:
+    import logging
+    from logging.handlers import SMTPHandler
+    mail_handler = SMTPHandler('localhost', 'pid-error@thran.cz', ADMINS, 'Plant ID Failed')
+    mail_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(mail_handler)
 
 @app.route('/')
 def home():
