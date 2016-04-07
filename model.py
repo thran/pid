@@ -60,7 +60,6 @@ class Model:
 
     def identify_plant(self, image, meta, threshold=0.05):
         prediction, raw_results = self.predict(image, meta)
-        print(prediction, raw_results)
         certainties = {k: float(v) for k, v in zip(["top1", "top3", "top5", "listed"],
                                            self.certainty_model.get_certainty(raw_results))}
         bests = {}
