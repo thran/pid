@@ -1,9 +1,9 @@
 var app = angular.module('pid', ["ngFileUpload"]);
 
 app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upload) {
-    $scope.$watch('file', function () {
-         if ($scope.file && $scope.file !== null) {
-             $scope.upload($scope.file);
+    $scope.$watch('files', function () {
+         if ($scope.files && $scope.files !== null && $scope.files.length > 0) {
+             $scope.upload($scope.files);
         }
     });
 
@@ -23,28 +23,36 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
   }
 
 
-    $scope.upload = function (file) {
-        $scope.results = null;
+    $scope.upload = function (files) {
+        $scope.images = null;
         $scope.error = null;
         $scope.loading = true;
         Upload.upload({
             url: '/identify',
             data: {
-                file: file,
+                files: files,
                 lat: $scope.lat,
                 lng: $scope.lng,
                 week: $scope.week
             }
         }).then(function (response) {
-            $scope.results = [];
+            $scope.images = [];
             $scope.loading = false;
             if (response.data.error){
                 $scope.error = response.data.error;
             }else {
-                angular.forEach(response.data.plants, function (prob, cls) {
-                    $scope.results.push({class: cls, probability: prob});
+                angular.forEach(response.data.images, function (image) {
+                    var img = {results: [], certainties: image.certainties};
+                    angular.forEach(image.plants, function (prob, cls) {
+                        img.results.push({class: cls, probability: prob});
+                    });
+                    $scope.images.push(img);
+                    console.log($scope.images);
                 });
-                $scope.certainties = response.data.certainties;
+                $scope.suggestions = [];
+                angular.forEach(response.data.suggestions, function (prob, cls) {
+                    $scope.suggestions.push({class: cls, probability: prob});
+                });
             }
         }, function(response){
             $scope.loading = false;

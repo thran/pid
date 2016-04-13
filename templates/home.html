@@ -12,8 +12,36 @@
 <body>
 
 <div ng-app="pid" ng-controller="pid" class="content row">
+
+    <div class="medium-4 columns">
+        <div class="loader" ng-cloak ng-show="loading"></div>
+        <p ng-show="error">{{ error }}</p>
+        <div ng-show="images && !error">
+            <ul>
+                <li ng-repeat="suggestion in suggestions | orderBy:'-probability'">
+                    <b>{{ suggestion.class }}</b> - {{ suggestion.probability * 100 | number:1 }}%
+                </li>
+            </ul>
+            <div ng-repeat="image in images">
+                <hr>
+                <ul>
+                    <li ng-repeat="result in image.results | orderBy:'-probability'">
+                        <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
+                    </li>
+                </ul>
+                <b>Certainty</b>
+                <ul>
+                    <li>The top one: <b>{{ image.certainties["1st"] * 100 | number:1 }}%</b></li>
+                    <li>In top 3: <b>{{ image.certainties.top3 * 100 | number:1 }}%</b></li>
+                    <li>In top 5: <b>{{ image.certainties.top5 * 100 | number:1 }}%</b></li>
+                    <li>Listed: <b>{{ image.certainties.listed * 100 | number:1 }}%</b></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div class="medium-8 columns">
-        <img ngf-thumbnail="file" alt="">
+        <img ng-repeat="file in files" ngf-thumbnail="file"  alt="">
         <label>Latitude
             <input type="number" ng-model="lat">
         </label>
@@ -24,31 +52,12 @@
             <input type="number" ng-model="week">
         </label>
         <br><br>
-        <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="file" ngf-multiple="false">Select Jpeg</div>
+        <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="files" ngf-multiple="true">Select Jpeg</div>
         <ul>
             <li ng-repeat="class in classes| orderBy">
                 {{ class }}
             </li>
         </ul>
-    </div>
-
-    <div class="medium-4 columns">
-        <div class="loader" ng-cloak ng-show="loading"></div>
-        <p ng-show="error">{{ error }}</p>
-        <div ng-show="results && !error">
-            <ul>
-                <li ng-repeat="result in results | orderBy:'-probability'">
-                    <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
-                </li>
-            </ul>
-            <b>Certainty</b>
-            <ul>
-                <li>The top one: <b>{{ certainties["1st"] * 100 | number:1 }}%</b></li>
-                <li>In top 3: <b>{{ certainties.top3 * 100 | number:1 }}%</b></li>
-                <li>In top 5: <b>{{ certainties.top5 * 100 | number:1 }}%</b></li>
-                <li>Listed: <b>{{ certainties.listed * 100 | number:1 }}%</b></li>
-            </ul>
-        </div>
     </div>
 </div>
 
