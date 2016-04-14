@@ -42,12 +42,14 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                 $scope.error = response.data.error;
             }else {
                 angular.forEach(response.data.images, function (image) {
-                    var img = {results: [], certainties: image.certainties};
+                    var img = {results: [], raw_predictions: [], certainties: image.certainties};
                     angular.forEach(image.plants, function (prob, cls) {
                         img.results.push({class: cls, probability: prob});
                     });
+                    angular.forEach(image.raw_predictions, function (prob, cls) {
+                        img.raw_predictions.push({class: cls, probability: prob});
+                    });
                     $scope.images.push(img);
-                    console.log($scope.images);
                 });
                 $scope.suggestions = [];
                 angular.forEach(response.data.suggestions, function (prob, cls) {

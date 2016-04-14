@@ -29,6 +29,12 @@
                         <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
                     </li>
                 </ul>
+                <b>Raw predictions</b>
+                <ul>
+                    <li ng-repeat="result in image.raw_predictions| orderBy:'-probability'">
+                        <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
+                    </li>
+                </ul>
                 <b>Certainty</b>
                 <ul>
                     <li>The top one: <b>{{ image.certainties["1st"] * 100 | number:1 }}%</b></li>

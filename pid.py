@@ -40,10 +40,16 @@ def identify():
     response = {"images": [], "suggestions": defaultdict(lambda: [])}
     for _, file in sorted(request.files.items(), key=lambda x: x[0]):
         ids, certainties = model.identify_plant(file.read(), request.form)
-        for plant, prob in ids.items():
-            response["suggestions"][plant].append(prob * certainties["listed"])
+        plants = {}
+        for i, (plant, prob) in enumerate(sorted(ids.items(), key=lambda x: x[1], reverse=True)):
+            p = prob * certainties["listed"]
+            if i == 0:
+                p = max(p, certainties["1st"])
+            plants[plant] = p
+            response["suggestions"][plant].append(p)
         response["images"].append({
-            "plants": ids,
+            "plants": plants,
+            "raw_predictions": ids,
             "certainties": certainties,
         })
     for plant, probs in response["suggestions"].items():
