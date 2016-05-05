@@ -21,6 +21,7 @@ if not app.debug:
     mail_handler.setLevel(logging.ERROR)
     app.logger.addHandler(mail_handler)
 
+
 @app.route('/')
 def home():
     return send_file('templates/home.html')

@@ -8,7 +8,8 @@ CERTAINTY_MODEL_FILE = "certainty_model.pkl"
 CLASSES_FILE = "classes.json"
 BASE_DIR = os.path.dirname(__file__)
 
-JPEG_DATA_TENSOR_NAME = 'DecodeJpeg/contents:0'
+JPEG_DATA_TENSOR_NAME = 'jpeg:0'
+RESULT_TENSOR_NAME = 'results/predictions:0'
 LAT_TENSOR_NAME = 'lat_placeholder:0'
 LNG_TENSOR_NAME = 'lng_placeholder:0'
 WEEK_TENSOR_NAME = 'week_placeholder:0'
@@ -35,7 +36,7 @@ class Model:
                 graph_def.ParseFromString(f.read())
                 _ = tf.import_graph_def(graph_def, name='')
             self.graph = sess.graph
-            self.result_tensor = self.graph.get_tensor_by_name('final_result:0')
+            self.result_tensor = self.graph.get_tensor_by_name(RESULT_TENSOR_NAME)
             self.raw_predictions_tensor = self.result_tensor.op.inputs[0]
             self.image_data_placeholder = self.graph.get_tensor_by_name(JPEG_DATA_TENSOR_NAME)
             self.lat_placeholder = self.graph.get_tensor_by_name(LAT_TENSOR_NAME)
@@ -50,11 +51,10 @@ class Model:
                     self.lat_placeholder: meta.get("lat", 0),
                     self.lng_placeholder: meta.get("lng", 0),
                     self.week_placeholder: meta.get("week", 0),
-                    "Placeholder:0": 1,
                 }
                 return [x[0] for x in sess.run([self.result_tensor, self.raw_predictions_tensor], feed_dict=feed_dict)]
 
-    def identify_plant_file(self, jpeq_file_path, meta, threshold=0.01):
+    def identify_plant_file(self, jpeq_file_path, meta, threshold=0.05):
         image = tf.gfile.FastGFile(jpeq_file_path, 'rb').read()
         self.identify_plant(image, meta)
 
