@@ -19,20 +19,20 @@
         <div ng-show="images && !error">
             <ul>
                 <li ng-repeat="suggestion in suggestions | orderBy:'-probability'">
-                    <b>{{ suggestion.class }}</b> - {{ suggestion.probability * 100 | number:1 }}%
+                    <b><a href="https://www.google.com/search?q={{ suggestion.class }}">{{ suggestion.class }}</a></b> - {{ suggestion.probability * 100 | number:1 }}%
                 </li>
             </ul>
             <div ng-repeat="image in images">
                 <hr>
                 <ul>
                     <li ng-repeat="result in image.results | orderBy:'-probability'">
-                        <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
+                        <b><a href="https://www.google.com/search?q={{ result.class }}">{{ result.class }}</a></b> - {{ result.probability * 100 | number:1 }}%
                     </li>
                 </ul>
                 <b>Raw predictions</b>
                 <ul>
                     <li ng-repeat="result in image.raw_predictions| orderBy:'-probability'">
-                        <b>{{ result.class }}</b> - {{ result.probability * 100 | number:1 }}%
+                        <b><a href="https://www.google.com/search?q={{ result.class }}">{{ result.class }}</a></b> - {{ result.probability * 100 | number:1 }}%
                     </li>
                 </ul>
                 <b>Certainty</b>

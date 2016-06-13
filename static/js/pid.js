@@ -27,6 +27,7 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         {'id': 'slow', 'name': 'Pomalu'},
         {'id': 'extra_slow', 'name': 'Extra pomalu'}
     ];
+    $scope.strategy = $scope.strategies[0];
 
     $scope.upload = function (files) {
         $scope.images = null;
