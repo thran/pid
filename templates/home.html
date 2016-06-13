@@ -57,6 +57,9 @@
         <label>Week number
             <input type="number" ng-model="week">
         </label>
+        <label>Strategie
+            <select ng-model='strategy' ng-options="s.name for s in strategies"></select>
+        </label>
         <br><br>
         <div class="button" ngf-accept="'image/jpeg'" get-file="showImage" ngf-select ng-model="files" ngf-multiple="true">Select Jpeg</div>
         <ul class="accordion " data-accordion>

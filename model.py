@@ -1,4 +1,6 @@
 import json
+
+import numpy as np
 import tfdeploy as td
 import tensorflow as tf
 import os
@@ -9,6 +11,7 @@ CLASSES_FILE = "classes.json"
 BASE_DIR = os.path.dirname(__file__)
 
 JPEG_DATA_TENSOR_NAME = 'jpeg:0'
+IMAGE_TENSOR_NAME = 'pre_process_image/convert_image:0'
 RESULT_TENSOR_NAME = 'results/predictions:0'
 LAT_TENSOR_NAME = 'lat_placeholder:0'
 LNG_TENSOR_NAME = 'lng_placeholder:0'
@@ -24,7 +27,50 @@ class CertaintyModel:
         return self.output.eval({self.input: sorted(input)})
 
 
+def crop_image(image, crop):
+    height, width, _ = image.shape
+
+    if crop == 'no_crop':
+        pass
+    if crop.startswith('left'):
+        if height >= width:
+            image = image[:width, :, :]
+        else:
+            image = image[:, :height, :]
+    if crop.startswith('center'):
+        if height >= width:
+            image = image[(height - width)/2:(height + width)/2, :, :]
+        else:
+            image = image[:, (width - height)/2:(height + width)/2, :]
+    if crop.startswith('right'):
+        if height >= width:
+            image = image[-width:, :, :]
+        else:
+            image = image[:, -height:, :]
+
+    height, width, _ = image.shape
+    if crop.endswith('_center'):
+        image = image[int(height * .15):int(height * .85), int(height * .15):int(height * .85), :]
+    if crop.endswith('_top_left'):
+        image = image[:int(height * .7), :int(height * .7), :]
+    if crop.endswith('_top_right'):
+        image = image[:int(height * .7), int(height * .3):, :]
+    if crop.endswith('_bottom_left'):
+        image = image[int(height * .3):, :int(height * .7), :]
+    if crop.endswith('_bottom_right'):
+        image = image[int(height * .3):, int(height * .3):, :]
+
+    return image
+
+
 class Model:
+    crops = [
+        'no_crop', 'center_center', 'center', 'right', 'left',
+        'center_top_left', 'center_top_right', 'center_bottom_left', 'center_bottom_right'
+        'left_center', 'left_top_left', 'left_top_right', 'left_bottom_left', 'left_bottom_right'
+        'right', 'right_top_left', 'right_top_right', 'right_bottom_left', 'right_bottom_right'
+    ]
+
     def __init__(self):
         self.certainty_model = CertaintyModel()
         with open(os.path.join(BASE_DIR, CLASSES_FILE)) as f:
@@ -39,31 +85,47 @@ class Model:
             self.result_tensor = self.graph.get_tensor_by_name(RESULT_TENSOR_NAME)
             self.raw_predictions_tensor = self.result_tensor.op.inputs[0]
             self.image_data_placeholder = self.graph.get_tensor_by_name(JPEG_DATA_TENSOR_NAME)
+            self.image = self.graph.get_tensor_by_name(IMAGE_TENSOR_NAME)
             self.lat_placeholder = self.graph.get_tensor_by_name(LAT_TENSOR_NAME)
             self.lng_placeholder = self.graph.get_tensor_by_name(LNG_TENSOR_NAME)
             self.week_placeholder = self.graph.get_tensor_by_name(WEEK_TENSOR_NAME)
 
-    def predict(self, image, meta):
-        with self.graph.as_default():
-            with tf.Session() as sess:
-                feed_dict = {
-                    self.image_data_placeholder: image,
-                    self.lat_placeholder: meta.get("lat", 0),
-                    self.lng_placeholder: meta.get("lng", 0),
-                    self.week_placeholder: meta.get("week", 0),
-                }
-                return [x[0] for x in sess.run([self.result_tensor, self.raw_predictions_tensor], feed_dict=feed_dict)]
+            self.jpeg = tf.placeholder(dtype='string')
+            image = tf.image.decode_jpeg(self.jpeg, channels=3)
+            self.decoded_image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+
+    def predict(self, sess, image, meta):
+        feed_dict = {
+            self.image: image,
+            self.lat_placeholder: meta.get("lat", 0),
+            self.lng_placeholder: meta.get("lng", 0),
+            self.week_placeholder: meta.get("week", 0),
+        }
+        return [x[0] for x in sess.run([self.result_tensor, self.raw_predictions_tensor], feed_dict=feed_dict)]
 
     def identify_plant_file(self, jpeq_file_path, meta, threshold=0.05):
         image = tf.gfile.FastGFile(jpeq_file_path, 'rb').read()
         self.identify_plant(image, meta)
 
-    def identify_plant(self, image, meta, threshold=0.05):
-        prediction, raw_results = self.predict(image, meta)
-        certainties = {k: float(v) for k, v in zip(["1st", "2nd", "3rd", "top3", "top5", "listed"],
-                                           self.certainty_model.get_certainty(raw_results))}
-        bests = {}
-        for pred, cls in zip(prediction, self.classes):
-            if pred >= threshold:
-                bests[cls] = float(pred)
-        return bests, certainties
+    def identify_plant(self, image, meta, crops=1, threshold=0.05):
+        with self.graph.as_default():
+            with tf.Session() as sess:
+                image = sess.run(self.decoded_image, {self.jpeg: image})
+
+                crops = self.crops[:min(crops, len(self.crops))]
+                row_mean = np.zeros(len(self.classes))
+                for crop in crops:
+                    cropped = crop_image(image, crop)
+                    _, raw = self.predict(sess, cropped, meta)
+                    row_mean += raw
+
+                row_mean /= len(crops)
+                prediction = sess.run(tf.nn.softmax(np.expand_dims(row_mean, 0)))[0]
+
+                certainties = {k: float(v) for k, v in zip(["1st", "2nd", "3rd", "top3", "top5", "listed"],
+                                                    self.certainty_model.get_certainty(row_mean))}
+                bests = {}
+                for pred, cls in zip(prediction, self.classes):
+                    if pred >= threshold:
+                        bests[cls] = float(pred)
+                return bests, certainties

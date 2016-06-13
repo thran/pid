@@ -40,7 +40,17 @@ def random_string(length=10):
 def identify():
     response = {"images": [], "suggestions": defaultdict(lambda: [])}
     for _, file in sorted(request.files.items(), key=lambda x: x[0]):
-        ids, certainties = model.identify_plant(file.read(), request.form)
+        crops = 1
+        strategy = request.args.get('strategy', 'fast')
+        if strategy == 'fast':
+            crops = 1
+        if strategy == 'medium':
+            crops = 5
+        if strategy == 'slow':
+            crops = 9
+        if strategy == 'extra_slow':
+            crops = 19
+        ids, certainties = model.identify_plant(file.read(), request.form, crops=crops)
         plants = {}
         for i, (plant, prob) in enumerate(sorted(ids.items(), key=lambda x: x[1], reverse=True)):
             p = prob * certainties["listed"]

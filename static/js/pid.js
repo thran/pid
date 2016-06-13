@@ -17,18 +17,23 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                 $scope.lat = position.coords.latitude;
                 $scope.lng = position.coords.longitude;
             });
-    });
-
+        });
         $scope.week = (new Date()).getWeekNumber();
-  }
+    }
 
+    $scope.strategies = [
+        {'id': 'fast', 'name': 'Rychle'},
+        {'id': 'medium', 'name': 'Středně rychle'},
+        {'id': 'slow', 'name': 'Pomalu'},
+        {'id': 'extra_slow', 'name': 'Extra pomalu'}
+    ];
 
     $scope.upload = function (files) {
         $scope.images = null;
         $scope.error = null;
         $scope.loading = true;
         Upload.upload({
-            url: '/identify',
+            url: '/identify?strategy='+$scope.strategy.id,
             data: {
                 files: files,
                 lat: $scope.lat,
