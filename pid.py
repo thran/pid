@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import random
 from flask import Flask, send_file, request
+from tensorflow.python.framework.errors import InvalidArgumentError
 from werkzeug.contrib.fixers import ProxyFix
 from model import Model
 import json
@@ -50,7 +51,10 @@ def identify():
             crops = 9
         if strategy == 'extra_slow':
             crops = 19
-        ids, certainties = model.identify_plant(file.read(), request.form, crops=crops)
+        try:
+            ids, certainties = model.identify_plant(file.read(), request.form, crops=crops)
+        except (InvalidArgumentError, SystemError) as err:
+            return str(err).split("\n")[0], 400
         plants = {}
         for i, (plant, prob) in enumerate(sorted(ids.items(), key=lambda x: x[1], reverse=True)):
             p = prob * certainties["listed"]
