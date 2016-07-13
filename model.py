@@ -16,6 +16,7 @@ RESULT_TENSOR_NAME = 'results/predictions:0'
 LAT_TENSOR_NAME = 'lat_placeholder:0'
 LNG_TENSOR_NAME = 'lng_placeholder:0'
 WEEK_TENSOR_NAME = 'week_placeholder:0'
+LAST_HIDDEN_TENSOR_NAME = 'inception_v3/logits/flatten/Reshape:0'
 
 
 class CertaintyModel:
@@ -63,6 +64,12 @@ def crop_image(image, crop):
     return image
 
 
+def normalize(vectors):
+    if len(vectors.shape) == 1:
+        return (vectors.T - vectors.mean()) / vectors.std()
+    return ((vectors.T - vectors.mean(axis=1)) / vectors.std(axis=1)).T
+
+
 class Model:
     crops = [
         'no_crop', 'center_center', 'center', 'right', 'left',
@@ -89,10 +96,14 @@ class Model:
             self.lat_placeholder = self.graph.get_tensor_by_name(LAT_TENSOR_NAME)
             self.lng_placeholder = self.graph.get_tensor_by_name(LNG_TENSOR_NAME)
             self.week_placeholder = self.graph.get_tensor_by_name(WEEK_TENSOR_NAME)
+            self.last_hidden = self.graph.get_tensor_by_name(LAST_HIDDEN_TENSOR_NAME)
 
             self.jpeg = tf.placeholder(dtype='string')
             image = tf.image.decode_jpeg(self.jpeg, channels=3)
             self.decoded_image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+
+            self.embeddings_meta = np.load(os.path.join(BASE_DIR, 'embeddings_meta.npy'))
+            self.embeddings = normalize(np.load(os.path.join(BASE_DIR, 'embeddings.npy')))
 
     def predict(self, sess, image, meta):
         feed_dict = {
@@ -101,13 +112,13 @@ class Model:
             self.lng_placeholder: meta.get("lng", 0),
             self.week_placeholder: meta.get("week", 0),
         }
-        return [x[0] for x in sess.run([self.result_tensor, self.raw_predictions_tensor], feed_dict=feed_dict)]
+        return [x[0] for x in sess.run([self.result_tensor, self.raw_predictions_tensor, self.last_hidden], feed_dict=feed_dict)]
 
     def identify_plant_file(self, jpeq_file_path, meta, threshold=0.05):
         image = tf.gfile.FastGFile(jpeq_file_path, 'rb').read()
         self.identify_plant(image, meta)
 
-    def identify_plant(self, image, meta, crops=1, threshold=0.05):
+    def identify_plant(self, image, meta, crops=1, threshold=0.05, similar_count=0):
         with self.graph.as_default():
             with tf.Session() as sess:
                 image = sess.run(self.decoded_image, {self.jpeg: image})
@@ -116,11 +127,15 @@ class Model:
                 row_mean = np.zeros(len(self.classes))
                 for crop in crops:
                     cropped = crop_image(image, crop)
-                    _, raw = self.predict(sess, cropped, meta)
+                    _, raw, e = self.predict(sess, cropped, meta)
                     row_mean += raw
+                    if crop == 'no_crop':
+                        embedding = e
 
                 row_mean /= len(crops)
                 prediction = sess.run(tf.nn.softmax(np.expand_dims(row_mean, 0)))[0]
+
+                similar = self.get_similar(prediction, embedding, similar_count)
 
                 certainties = {k: float(v) for k, v in zip(["1st", "2nd", "3rd", "top3", "top5", "listed"],
                                                     self.certainty_model.get_certainty(row_mean))}
@@ -128,4 +143,16 @@ class Model:
                 for pred, cls in zip(prediction, self.classes):
                     if pred >= threshold:
                         bests[cls] = float(pred)
-                return bests, certainties
+                return bests, certainties, similar
+
+    def get_similar(self, prediction, embedding, count):
+        if count == 0:
+            return
+
+        plant_filter = self.embeddings_meta[:, 3] == np.argmax(prediction)
+        embeddings = self.embeddings[plant_filter]
+        embeddings_meta = self.embeddings_meta[plant_filter]
+        embedding = normalize(embedding)
+        norms = np.linalg.norm(embeddings - embedding, axis=1)
+
+        return [embeddings_meta[id][5] for id in np.argsort(norms)[:count]]

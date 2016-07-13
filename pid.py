@@ -43,6 +43,7 @@ def identify():
     for _, file in sorted(request.files.items(), key=lambda x: x[0]):
         crops = 1
         strategy = request.args.get('strategy', 'fast')
+        similar_count = int(request.args.get('similar_count', '0'))
         if strategy == 'fast':
             crops = 1
         if strategy == 'medium':
@@ -52,7 +53,7 @@ def identify():
         if strategy == 'extra_slow':
             crops = 19
         try:
-            ids, certainties = model.identify_plant(file.read(), request.form, crops=crops)
+            ids, certainties, similar = model.identify_plant(file.read(), request.form, crops=crops, similar_count=similar_count)
         except (InvalidArgumentError, SystemError) as err:
             return str(err).split("\n")[0], 400
         plants = {}
@@ -66,6 +67,7 @@ def identify():
             "plants": plants,
             "raw_predictions": ids,
             "certainties": certainties,
+            "similar": similar,
         })
     for plant, probs in response["suggestions"].items():
         response["suggestions"][plant] = 1 - np.product(1 - np.array(probs))

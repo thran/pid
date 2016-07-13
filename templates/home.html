@@ -42,6 +42,8 @@
                     <li>In top 5: <b>{{ image.certainties.top5 * 100 | number:1 }}%</b></li>
                     <li>Listed: <b>{{ image.certainties.listed * 100 | number:1 }}%</b></li>
                 </ul>
+
+                <img ng-repeat="similar in image.similar" src="http://images.flowerchecker.com/images/{{ similar }}-medium">
             </div>
         </div>
     </div>

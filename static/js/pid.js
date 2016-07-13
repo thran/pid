@@ -34,7 +34,7 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
         $scope.error = null;
         $scope.loading = true;
         Upload.upload({
-            url: '/identify?strategy='+$scope.strategy.id,
+            url: '/identify?similar_count=3&strategy='+$scope.strategy.id,
             data: {
                 files: files,
                 lat: $scope.lat,
@@ -48,7 +48,7 @@ app.controller("pid", ["$scope", "$http", "Upload", function ($scope, $http, Upl
                 $scope.error = response.data.error;
             }else {
                 angular.forEach(response.data.images, function (image) {
-                    var img = {results: [], raw_predictions: [], certainties: image.certainties};
+                    var img = {results: [], raw_predictions: [], certainties: image.certainties, similar: image.similar};
                     angular.forEach(image.plants, function (prob, cls) {
                         img.results.push({class: cls, probability: prob});
                     });
