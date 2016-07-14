@@ -149,10 +149,10 @@ class Model:
         if count == 0:
             return
 
-        plant_filter = self.embeddings_meta[:, 3] == np.argmax(prediction)
+        plant_filter = self.embeddings_meta[:, 2] == np.argmax(prediction)
         embeddings = self.embeddings[plant_filter]
         embeddings_meta = self.embeddings_meta[plant_filter]
         embedding = normalize(embedding)
         norms = np.linalg.norm(embeddings - embedding, axis=1)
 
-        return [embeddings_meta[id][5] for id in np.argsort(norms)[:count]]
+        return [embeddings_meta[id][4] for id in np.argsort(norms)[:count]]
