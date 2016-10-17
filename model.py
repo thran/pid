@@ -125,14 +125,17 @@ class Model:
 
                 crops = self.crops[:min(crops, len(self.crops))]
                 row_mean = np.zeros(len(self.classes))
+                certainty_sum = 0
                 for crop in crops:
                     cropped = crop_image(image, crop)
                     _, raw, e = self.predict(sess, cropped, meta)
-                    row_mean += raw
+                    certainty = self.certainty_model.get_certainty(raw)[0]
+                    row_mean += raw * certainty
+                    certainty_sum += certainty
                     if crop == 'no_crop':
                         embedding = e
 
-                row_mean /= len(crops)
+                row_mean /= certainty_sum
                 prediction = sess.run(tf.nn.softmax(np.expand_dims(row_mean, 0)))[0]
 
                 similar = self.get_similar(prediction, embedding, similar_count)
